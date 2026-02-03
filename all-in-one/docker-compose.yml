@@ -1,6 +1,7 @@
 volumes:
     grafana_data: {}
     clickhouse_data: {}
+    postgres_data: {}
 
 services:
   grafana:
@@ -102,6 +103,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./vector/vector.toml:/etc/vector/vector.toml:ro
+      - /var/log/asterisk:/var/log/asterisk:ro
+    ports:
+      - "514:514/udp"
     depends_on:
       - qryn
     logging:

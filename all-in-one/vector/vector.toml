@@ -1,31 +1,40 @@
-# Random Syslog-formatted logs
-[sources.dummy_logs]
-type = "demo_logs"
-format = "syslog"
-interval = 5.0
+[sources.asterisk_local_logs]
+type = "file"
+include = ["/var/log/asterisk/full"]
+ignore_older = 86400  # optional, ignore files older than 1 day
+start_at_beginning = false  # true = read from start, false = only new lines
 
-# Parse Syslog logs
-[transforms.parse_logs]
-type = "remap"
-inputs = ["dummy_logs"]
-source = '''
-. = parse_syslog!(string!(.message))
-'''
-
-[sinks.cloki_syslog]
-type="loki"
-inputs = ["parse_logs"]
+[sinks.cloki_asterisk_local]
+type = "loki"
+inputs = ["asterisk_local_logs"]
 endpoint = "http://qryn:3100"
-#tenant_id = "0"
 compression = "none"
 
-    [sinks.cloki_syslog.labels]
-    forwarder = "vector"
-    event = "{{ facility }}"
-    type = "syslog"
+[sinks.cloki_asterisk_local.labels]
+forwarder = "vector"
+type = "asterisk_local"
 
-    [sinks.cloki_syslog.encoding]
-    codec = "json"
+[sinks.cloki_asterisk_local.encoding]
+codec = "json"
+
+
+[sources.asterisk_remote_syslog]
+type = "syslog"
+address = "0.0.0.0:514"
+mode = "udp"
+
+[sinks.cloki_asterisk_remote]
+type = "loki"
+inputs = ["asterisk_remote_syslog"]
+endpoint = "http://qryn:3100"
+compression = "none"
+
+[sinks.cloki_asterisk_remote.labels]
+forwarder = "vector"
+type = "asterisk_remote"
+
+[sinks.cloki_asterisk_remote.encoding]
+codec = "json"
 
 
 [sources.homer_scrape]
